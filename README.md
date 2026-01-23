@@ -6,7 +6,7 @@ As a Paraguay tax resident (having a Tax ID) you have to file VATs (form 211) on
 
 The script also automatically updates your profile information which is usually requested once a year (in August).
 
-Feel free to [support me](#support-me) if you find this helfpul. Thank you!
+Feel free to [support me](#support-me) if you find this helpful. Thank you!
 
 [<img src="https://i.imgur.com/kI1J5wP.png" alt="drawing" height="60"/>](#support-me)
 
@@ -50,7 +50,25 @@ Go to a directory of your choice and clone the repo:
 git clone https://github.com/stitch-05/file-taxes-paraguay.git && cd file-taxes-paraguay
 ```
 
-Either fill in your login information (`USERNAME` and `PASSWORD`) in `.env`, create `.env.local` and add those parameters there or use script arguments. For more information see `./file-taxes.sh --help`.
+Create a `.env` or `.env.local` file by copying the provided template:
+
+```
+cp .env.example .env
+```
+
+or
+
+```
+cp .env.example .env.local
+```
+
+Your env files stay local and are ignored by git.
+
+Do NOT change `.env.example` or you'll run into issues when updating the repo.
+
+Either fill in your login information (`USERNAME` and `PASSWORD`) in your local env file or use script arguments.
+
+For more information on how to use script arguments see `./file-taxes.sh --help`.
 
 ## 3) Run
 
@@ -73,16 +91,26 @@ crontab -e
 and add the following:
 
 ```
-0 3 2 * * /home/<user>/<path to script/file-taxes.sh >/dev/null 2>&1
+0 3 2 \* \* /home/<user>/<path to script/file-taxes.sh >/dev/null 2>&1
 ```
 
 ## 5) Receive Notifications (optional)
 
-Receive a notification everytime the script fails or succeeds to file VAT.
+Receive a notification every time the script fails or succeeds to file VAT.
+
+### 5.0) Notification Prefix
+
+To customize the prefix displayed before notification messages, add the following to your local env file (`.env` or `.env.local`) or use script argument `--message-prefix`:
+
+```
+export MESSAGE_PREFIX="🇵🇾 taxes"$'\n'
+```
+
+Leave empty for no prefix.
 
 ### 5.1) Pushover
 
-To use [Pushover](https://pushover.net/) as your notification service, create your pushover token and add the following to `.env` or `.env.local`:
+To use [Pushover](https://pushover.net/) as your notification service, create your pushover token and add the following to your env file (`.env` or `.env.local`) or use the relevant script arguments:
 
 ```
 NOTIFICATION_SERVICE="pushover"
@@ -93,35 +121,56 @@ PUSHOVER_USER=<your pushover user>
 
 ### 5.2) Signal
 
-To use [Signal](https://signal.org) as your notification service, install [signal-cli](https://github.com/asamk/signal-cli) (beyond the scope of this tutorial) and add the following to `.env` or `.env.local`:
+To use [Signal](https://signal.org) as your notification service, install [signal-cli](https://github.com/asamk/signal-cli) (beyond the scope of this tutorial) and add the following to your env file (`.env` or `.env.local`) or use the relevant script arguments:
 
 ```
 NOTIFICATION_SERVICE="signal"
 
-SIGNAL_NUMBER=<your signal phone number>
+SIGNAL_USER=<your signal phone number>
+SIGNAL_RECIPIENT=<recipient signal phone number>
 ```
 
-### 5.2) Email
+### 5.3) Email
 
-Use SMTP to receive email notifications. Requires python3 installed. Add the following to `.env` or `.env.local`.
+Use SMTP to receive email notifications. Requires python3 installed. Add the following to your env file (`.env` or `.env.local`) or use the relevant script arguments.
 Below example uses SMTP submission feature from proton mail.
 
 ```
+NOTIFICATION_SERVICE="email"
+
 export SMTP_HOST="smtp.protonmail.ch"
 export SMTP_PORT="587"
 export SMTP_ADDR="mypytax@pm.me"
 export SMTP_PWD="g1df65gdf51g1gf65dg1df5g16d5fg1d2615dgfg"
-# actual receiver/s of email notifications (';' seprated string)
+
+# actual receiver/s of email notifications (';' separated string)
+
 export SMTP_RECV="email0@pm.me;email1@gmail.com"
+```
+
+## 6) Download Statements (optional)
+
+You can download statements of filed taxes in HTML format by adding the following to your local env file (`.env` or `.env.local`) or using the relevant script arguments:
+
+```
+DOWNLOAD_STATEMENTS="TRUE"
+```
+
+You can also specify the download directory (default is `statements` in the script directory):
+
+```
+DOWNLOAD_DIR="/path/to/download/directory"
 ```
 
 ## Common issues
 
-If you run into any issues with the script, please make the script more verbose by changing `WGET_OUTPUT` in `.env` to the following and running the script again:
+If you run into any issues with the script, please make the script more verbose by changing `WGET_OUTPUT` in your local env file (`.env` or `.env.local`) to the following and running the script again:
 
 ```
 WGET_OUTPUT="" # or "-d" for even more verbosity
 ```
+
+You can also run the script with `--wget-output ""` argument.
 
 The 2 most common issues are SSL issues related to the old server certificate and login captcha.
 
@@ -129,19 +178,21 @@ The 2 most common issues are SSL issues related to the old server certificate an
 
 If `wget` outputs an SSL error, you have several options of **trying** to fix it none of which can be covered in detail as they vary based on the OS version.
 
-Your best bet is uncommenting the following line in `.env` and running the script again:
+Your best bet is to uncomment the following line in your local env file (`.env` or `.env.local`) or add it if it doesn't exist and run the script again:
 
 ```
 WGET_FLAGS="--secure-protocol tlsv1"
 ```
 
+You can also run the script with `--wget-flags "--secure-protocol tlsv1"` argument.
+
 If it doesn't help, you will have to play with the flag (google is your friend).
 
-Other option is to lower your SSL security sesttings in `/etc/ssl/openssl.cnf` which is NOT RECOMMENDED! Again, it depends on the version of your OS and openssl library.
+Another option is to lower your SSL security settings in `/etc/ssl/openssl.cnf`, which is NOT RECOMMENDED! Again, it depends on the version of your OS and openssl library.
 
 ### Captcha
 
-You may be required to solve captcha. The script is currently unable of doing so but you can get around this issue by solving it in the browser first and running the script again. You will see a captcha related error in the console with the link to where you can solve it first.
+You may be required to solve captcha. The script is currently unable to do so, but you can work around this issue by solving it in the browser first and running the script again. You will see a captcha-related error in the console with the link where you can solve it first.
 
 ### No pending actions
 
