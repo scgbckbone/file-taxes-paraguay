@@ -2,3 +2,5 @@
 .version.local
 cookies.txt
 logs/
+.cache/
+downloads/
